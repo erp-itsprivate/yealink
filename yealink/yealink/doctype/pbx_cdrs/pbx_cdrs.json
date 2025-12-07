@@ -1,0 +1,229 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-04 10:15:10.017697",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pbx_section",
+  "pbx",
+  "related_doctype",
+  "related_doctype_id",
+  "data_section",
+  "cdr_id",
+  "call_from",
+  "cdr_time",
+  "duration",
+  "src_addr",
+  "call_type",
+  "call_from_number",
+  "call_from_name",
+  "did",
+  "call_id",
+  "call_note",
+  "column_break_biap",
+  "uid",
+  "call_to",
+  "timestamp",
+  "talk_duration",
+  "disposition",
+  "reason",
+  "call_to_number",
+  "call_to_name",
+  "call_note_id",
+  "did_name",
+  "enb_call_note",
+  "ring_duration",
+  "section_break_vvhk",
+  "full_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "pbx",
+   "fieldtype": "Link",
+   "label": "PBX",
+   "options": "PBX Settings"
+  },
+  {
+   "fieldname": "cdr_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "CDR ID",
+   "unique": 1
+  },
+  {
+   "fieldname": "cdr_time",
+   "fieldtype": "Data",
+   "label": "Time"
+  },
+  {
+   "fieldname": "call_from",
+   "fieldtype": "Data",
+   "label": "Call From"
+  },
+  {
+   "fieldname": "call_to",
+   "fieldtype": "Data",
+   "label": "Call To"
+  },
+  {
+   "fieldname": "timestamp",
+   "fieldtype": "Float",
+   "label": "TimeStamp"
+  },
+  {
+   "fieldname": "full_data",
+   "fieldtype": "Long Text",
+   "label": "Full Data"
+  },
+  {
+   "fieldname": "uid",
+   "fieldtype": "Data",
+   "label": "UID"
+  },
+  {
+   "fieldname": "src_addr",
+   "fieldtype": "Data",
+   "label": "Source Address"
+  },
+  {
+   "fieldname": "data_section",
+   "fieldtype": "Section Break",
+   "label": "CDR Data"
+  },
+  {
+   "fieldname": "duration",
+   "fieldtype": "Int",
+   "label": "Duration"
+  },
+  {
+   "fieldname": "column_break_biap",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "talk_duration",
+   "fieldtype": "Int",
+   "label": "Talk Duration"
+  },
+  {
+   "fieldname": "section_break_vvhk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "pbx_section",
+   "fieldtype": "Section Break",
+   "label": "PBX"
+  },
+  {
+   "fieldname": "disposition",
+   "fieldtype": "Data",
+   "label": "Disposition"
+  },
+  {
+   "fieldname": "call_type",
+   "fieldtype": "Data",
+   "label": "Call Type"
+  },
+  {
+   "fieldname": "call_from_number",
+   "fieldtype": "Data",
+   "label": "Call From Number"
+  },
+  {
+   "fieldname": "call_from_name",
+   "fieldtype": "Data",
+   "label": "Call From Name"
+  },
+  {
+   "fieldname": "call_note",
+   "fieldtype": "Long Text",
+   "label": "Call Note"
+  },
+  {
+   "fieldname": "did",
+   "fieldtype": "Data",
+   "label": "DID"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Data",
+   "label": "Reason"
+  },
+  {
+   "fieldname": "call_to_number",
+   "fieldtype": "Data",
+   "label": "Call To Number"
+  },
+  {
+   "fieldname": "call_to_name",
+   "fieldtype": "Data",
+   "label": "Call To Name"
+  },
+  {
+   "fieldname": "call_note_id",
+   "fieldtype": "Data",
+   "label": "Call Note ID"
+  },
+  {
+   "fieldname": "did_name",
+   "fieldtype": "Data",
+   "label": "DID Name"
+  },
+  {
+   "fieldname": "call_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Call ID"
+  },
+  {
+   "fieldname": "enb_call_note",
+   "fieldtype": "Data",
+   "label": "Enb Call Note"
+  },
+  {
+   "default": "0",
+   "fieldname": "ring_duration",
+   "fieldtype": "Int",
+   "label": "Ring Duration"
+  },
+  {
+   "fieldname": "related_doctype",
+   "fieldtype": "Link",
+   "label": "Related Doctype",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "related_doctype_id",
+   "fieldtype": "Dynamic Link",
+   "label": "Document ID",
+   "options": "related_doctype"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-07 11:41:38.980811",
+ "modified_by": "Administrator",
+ "module": "Yealink",
+ "name": "PBX CDRs",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

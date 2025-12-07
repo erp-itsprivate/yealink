@@ -1,0 +1,330 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:pbx_name",
+ "creation": "2025-11-26 15:41:02.047955",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_section",
+  "pbx_name",
+  "url",
+  "disable",
+  "total_cdrs",
+  "column_break_dufk",
+  "username",
+  "password",
+  "last_cdr_data",
+  "diff_time_to_sync",
+  "apis_section",
+  "get_token_url",
+  "get_token_method",
+  "refresh_token_url",
+  "refresh_token_method",
+  "create_contact_api",
+  "create_contact_method",
+  "delete_contact_api",
+  "delete_contact_method",
+  "get_cdrs_api",
+  "get_cdrs_method",
+  "cdr_page_size",
+  "column_break_ciub",
+  "call_api",
+  "call_api_method",
+  "dial_permission_ext",
+  "get_phonebook_api",
+  "get_phonebook_method",
+  "create_phonebook_api",
+  "create_phonebook_method",
+  "get_cdrs_api_by_datetime",
+  "contacts_sync_section",
+  "pbx_contact_sync",
+  "security_section",
+  "pbx_token",
+  "pbx_refresh_token",
+  "column_break_yjvq",
+  "webhook_secret",
+  "section_break_pkmj",
+  "allowed_ips",
+  "events_section",
+  "pbx_events",
+  "phonebooks_section",
+  "pbx_phonebooks",
+  "mapping_phones_section",
+  "mapping_phones"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_section",
+   "fieldtype": "Section Break",
+   "label": "General"
+  },
+  {
+   "fieldname": "pbx_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_dufk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "disable",
+   "fieldtype": "Check",
+   "label": "Disable"
+  },
+  {
+   "fieldname": "url",
+   "fieldtype": "Data",
+   "label": "URL"
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "UserName"
+  },
+  {
+   "fieldname": "password",
+   "fieldtype": "Data",
+   "label": "Password"
+  },
+  {
+   "fieldname": "apis_section",
+   "fieldtype": "Section Break",
+   "label": "APIs"
+  },
+  {
+   "fieldname": "column_break_ciub",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "call_api",
+   "fieldtype": "Data",
+   "label": "Call API"
+  },
+  {
+   "fieldname": "get_token_url",
+   "fieldtype": "Data",
+   "label": "Get Token URL"
+  },
+  {
+   "fieldname": "security_section",
+   "fieldtype": "Section Break",
+   "label": "Security"
+  },
+  {
+   "fieldname": "pbx_token",
+   "fieldtype": "Data",
+   "label": "PBX Token"
+  },
+  {
+   "fieldname": "column_break_yjvq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "webhook_secret",
+   "fieldtype": "Data",
+   "label": "Webhook Secret"
+  },
+  {
+   "fieldname": "section_break_pkmj",
+   "fieldtype": "Section Break",
+   "label": "Allowd IPs"
+  },
+  {
+   "fieldname": "allowed_ips",
+   "fieldtype": "Table",
+   "label": "Allowed IPs",
+   "options": "IPs"
+  },
+  {
+   "fieldname": "contacts_sync_section",
+   "fieldtype": "Section Break",
+   "label": "Contacts Sync"
+  },
+  {
+   "fieldname": "pbx_contact_sync",
+   "fieldtype": "Table",
+   "label": "Contacts Sync",
+   "options": "PBX Contact Sync"
+  },
+  {
+   "fieldname": "get_token_method",
+   "fieldtype": "Select",
+   "label": "Get Token Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "call_api_method",
+   "fieldtype": "Select",
+   "label": "Call API Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "pbx_refresh_token",
+   "fieldtype": "Data",
+   "label": "PBX Refresh Token"
+  },
+  {
+   "fieldname": "refresh_token_url",
+   "fieldtype": "Data",
+   "label": "Refresh token URL"
+  },
+  {
+   "fieldname": "refresh_token_method",
+   "fieldtype": "Select",
+   "label": "Refresh Token Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "dial_permission_ext",
+   "fieldtype": "Data",
+   "label": "Dial Permission Ext"
+  },
+  {
+   "fieldname": "events_section",
+   "fieldtype": "Section Break",
+   "label": "Events"
+  },
+  {
+   "fieldname": "pbx_events",
+   "fieldtype": "Table",
+   "label": "Events",
+   "options": "PBX Events"
+  },
+  {
+   "fieldname": "get_phonebook_api",
+   "fieldtype": "Data",
+   "label": "Get PhoneBook API"
+  },
+  {
+   "fieldname": "get_phonebook_method",
+   "fieldtype": "Select",
+   "label": "Get PhoneBook Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "phonebooks_section",
+   "fieldtype": "Section Break",
+   "label": "PhoneBooks"
+  },
+  {
+   "fieldname": "pbx_phonebooks",
+   "fieldtype": "Table",
+   "label": "PhoneBooks",
+   "options": "PBX PhoneBooks",
+   "read_only": 1
+  },
+  {
+   "fieldname": "create_phonebook_api",
+   "fieldtype": "Data",
+   "label": "Create PhoneBook API"
+  },
+  {
+   "fieldname": "create_phonebook_method",
+   "fieldtype": "Select",
+   "label": "Create PhoneBook Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "create_contact_api",
+   "fieldtype": "Data",
+   "label": "Create Contact API"
+  },
+  {
+   "fieldname": "create_contact_method",
+   "fieldtype": "Select",
+   "label": "Create Contact Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "mapping_phones_section",
+   "fieldtype": "Section Break",
+   "label": "Mapping Phones"
+  },
+  {
+   "fieldname": "mapping_phones",
+   "fieldtype": "Table",
+   "label": "Mapping",
+   "options": "PBX Mapping Phones"
+  },
+  {
+   "fieldname": "delete_contact_api",
+   "fieldtype": "Data",
+   "label": "Delete Contact API"
+  },
+  {
+   "fieldname": "delete_contact_method",
+   "fieldtype": "Select",
+   "label": "Delete Contact Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "get_cdrs_api",
+   "fieldtype": "Data",
+   "label": "GET CDRs API"
+  },
+  {
+   "fieldname": "get_cdrs_method",
+   "fieldtype": "Select",
+   "label": "GET CDRs Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "total_cdrs",
+   "fieldtype": "Int",
+   "label": "Total CDRs"
+  },
+  {
+   "fieldname": "cdr_page_size",
+   "fieldtype": "Int",
+   "label": "CDR Page Size"
+  },
+  {
+   "fieldname": "last_cdr_data",
+   "fieldtype": "Datetime",
+   "label": "Last CDRs Date"
+  },
+  {
+   "fieldname": "get_cdrs_api_by_datetime",
+   "fieldtype": "Data",
+   "label": "GET CDRs API DateTime"
+  },
+  {
+   "fieldname": "diff_time_to_sync",
+   "fieldtype": "Int",
+   "label": "Differnect Time To sync (Minutes)"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-07 12:06:40.281912",
+ "modified_by": "Administrator",
+ "module": "Yealink",
+ "name": "PBX Settings",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
