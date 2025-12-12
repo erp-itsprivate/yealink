@@ -163,7 +163,7 @@ class PBXSettings(Document):
 		frappe.db.commit()
 
 		return res
-	@retry_on_token_expiry						
+	 						
 	def get_cdrs_by_date(self):
 		if self.last_cdr_data is None:
 			self.last_cdr_data=frappe.utils.get_datetime()
@@ -222,7 +222,7 @@ class PBXSettings(Document):
 		else:
 			get_cdrs_url=self.url+self.get_cdrs_api_by_datetime
 			start_time=self.last_cdr_data.replace(hour=0, minute=0, second=0).timestamp()
-			end_time=self.last_cdr_data.replace(hour=23, minute=59, second=59).timestamp()
+			end_time=frappe.utils.get_datetime().replace(hour=23, minute=59, second=59).timestamp()
 			
 
 			query_params = {
@@ -231,13 +231,15 @@ class PBXSettings(Document):
 						"end_time":  str(int(end_time))
 						 
 				}			
-			
+			print(query_params)
 			res=integrate(url=get_cdrs_url,token=None,req_data=None,query_params=query_params,method=self.get_cdrs_method)
 			
 		if res.status_code==200:
 			if res.json().get('errcode') == 0 :			
 				if  res.json().get('total_number') > 0 :
-					
+				 
+					self.db_set('total_cdrs',res.json().get('total_number'),False,False,True)
+					 
 					self.db_set('last_cdr_data',frappe.utils.get_datetime(),False,False,True)
 					
 					print(self.last_cdr_data)	
