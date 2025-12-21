@@ -11,7 +11,12 @@ import pymysql
 
  
 class PBXSettings(Document):
-	
+	def on_update(self):
+		type_filters=[]
+		for webhook_filter in self.webhook_events:
+			type_filters.append({"type":webhook_filter.event_type_filter,"filter_code":webhook_filter.event_filter,"action_code":webhook_filter.event_action})
+		self.db_set('webhook_event_filter',str(type_filters),False,False,True)	
+		
 	def get_phonebooks_to_sync(self):
 		for phonebook_sync in self.pbx_contact_sync:
 			if phonebook_sync.disable == 0 :

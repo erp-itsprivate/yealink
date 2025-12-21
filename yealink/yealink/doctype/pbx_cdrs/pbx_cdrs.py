@@ -4,9 +4,37 @@
 import frappe
 import ast,json
 from frappe.model.document import Document
-from yealink.utils import get_contact
+from yealink.utils import get_contact,get_extension_user,get_extension_email
+from frappe.desk.form.assign_to import add 
 
 class PBXCDRs(Document):
+	def create_task_for_notanswered(self):
+		self.reload()
+		assigned_to=get_extension_user(self.call_to_number)
+		task = frappe.get_doc({
+        "doctype": "Task",
+        "subject": "Call",
+        "description": "Call "+str(assigned_to)+str(self.call_to_number),
+       
+        "status": "Open"
+   		 })
+
+    # Insert into DB
+		task.insert(ignore_permissions=True)
+		assigned_to_list=[]
+		assigned_to_list.append(assigned_to)
+    # Assign to a user if provided
+	
+		add({
+             "assign_to": assigned_to_list, 
+             "doctype": "Task",
+             "name": task.name,
+             "description": 'ddd',
+             "priority": task.priority
+        })
+		frappe.db.commit()
+
+
 	def after_insert(self):	
 		try:
 			data= ast.literal_eval(str(self.full_data))
@@ -43,7 +71,8 @@ class PBXCDRs(Document):
 		if contact is not None :
 			updates.update({"related_doctype_id":contact})
 		
- 
+		
 		
 		frappe.db.set_value(self.doctype, self.name, updates)
+		self.create_task_for_notanswered()
 	

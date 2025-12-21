@@ -63,7 +63,9 @@ app_license = "mit"
 # role_home_page = {
 # 	"Role": "home_page"
 # }
-
+permission_query_conditions = {
+    "To Do": "yealink.utils.get_todo_query_conditions"
+}
 # Generators
 # ----------
 

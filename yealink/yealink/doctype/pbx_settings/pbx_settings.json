@@ -42,9 +42,11 @@
   "pbx_contact_sync",
   "security_section",
   "pbx_token",
-  "pbx_refresh_token",
   "column_break_yjvq",
-  "webhook_secret",
+  "pbx_refresh_token",
+  "webhook_events_section",
+  "webhook_events",
+  "webhook_event_filter",
   "section_break_pkmj",
   "allowed_ips",
   "events_section",
@@ -123,11 +125,6 @@
   {
    "fieldname": "column_break_yjvq",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "webhook_secret",
-   "fieldtype": "Data",
-   "label": "Webhook Secret"
   },
   {
    "fieldname": "section_break_pkmj",
@@ -303,12 +300,28 @@
    "fieldtype": "Code",
    "label": "CDRs Filter",
    "options": "Python"
+  },
+  {
+   "fieldname": "webhook_events_section",
+   "fieldtype": "Section Break",
+   "label": "Webhook Events"
+  },
+  {
+   "fieldname": "webhook_events",
+   "fieldtype": "Table",
+   "label": "Webhook events",
+   "options": "PBX Webhook Events"
+  },
+  {
+   "fieldname": "webhook_event_filter",
+   "fieldtype": "Long Text",
+   "label": "Webhook Event Filter"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-08 02:17:21.198608",
+ "modified": "2025-12-15 13:42:29.898420",
  "modified_by": "Administrator",
  "module": "Yealink",
  "name": "PBX Settings",
