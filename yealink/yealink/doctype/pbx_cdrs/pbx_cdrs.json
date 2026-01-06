@@ -37,6 +37,7 @@
   "src_trunk",
   "dst_trunk",
   "company",
+  "num_tries_get_contact",
   "section_break_vvhk",
   "full_data"
  ],
@@ -217,12 +218,18 @@
    "fieldname": "dst_trunk",
    "fieldtype": "Data",
    "label": "Destination Trunk"
+  },
+  {
+   "default": "0",
+   "fieldname": "num_tries_get_contact",
+   "fieldtype": "Int",
+   "label": "Number of Tries to Get Contact"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-23 16:23:39.757277",
+ "modified": "2026-01-03 10:22:57.716238",
  "modified_by": "Administrator",
  "module": "Yealink",
  "name": "PBX CDRs",

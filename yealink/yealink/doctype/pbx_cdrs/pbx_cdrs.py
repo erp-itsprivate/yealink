@@ -40,6 +40,8 @@ class PBXCDRs(Document):
 				})
 				frappe.db.commit()
 
+	
+		
 
 	def after_insert(self):	
 		try:
@@ -76,10 +78,11 @@ class PBXCDRs(Document):
 		"company":  frappe.get_doc("PBX Company Trunk", {"trunk": str(data.get("src_trunk"))}).company if frappe.db.exists("PBX Company Trunk", {"trunk": str(data.get("src_trunk"))}) else ( frappe.get_doc("PBX Company Trunk", {"trunk": str(data.get("dst_trunk"))}).company if frappe.db.exists("PBX Company Trunk", {"trunk": str(data.get("dst_trunk"))}) else None)
 
 		}
-		contact=get_contact(str(data.get('call_from_number')))
+		if str(data.get('call_type')) =='Inbound':
+			contact=get_contact(str(data.get('call_from_number')))
 		 
-		if contact is not None :
-			updates.update({"related_doctype_id":contact})
+			if contact is not None :
+				updates.update({"related_doctype_id":contact})
 		else:
 			contact=get_contact(str(data.get('call_to_number')))
 			if contact is not None :
@@ -103,6 +106,10 @@ def get_phone_cdrs(incoming,outgoing,number):
 		return cdrs
 
 
-def get_phone_cdrs_by_cdrid(incoming,outgoing,number):
-	frappe.get_all('PBX CDRs',or_filters=[[ "call_to_number", "=", '0997777073'],[ "call_from_number", "=", '0997777073']],fields=['call_id'],order_by='cdr_id desc',distinct=True,limit=3,pluck='call_id')
+def get_phone_cdrs_by_cdrid(number):	
+	from datetime import datetime
+	all_cdrs= frappe.get_all('PBX CDRs',or_filters=[[ "call_to_number", "=", '0997777073'],[ "call_from_number", "=", '0997777073']],fields=['call_id'],order_by='cdr_id desc',distinct=True,limit=3,pluck='call_id')
+	cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id desc',fields=['call_type','related_doctype_id','company','call_from_number','call_to_number','talk_duration','disposition','call_id','cdr_id','cdr_time'])
+	docs = [ {**d, "creation": datetime.strptime(d["cdr_time"], "%d/%m/%Y %H:%M:%S") } for d in cdrs ]
+	return docs
 

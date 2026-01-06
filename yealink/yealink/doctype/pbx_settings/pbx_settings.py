@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from yealink.utils import integrate,retry_on_token_expiry,process_code,get_user_extension
+from yealink.utils import integrate,retry_on_token_expiry,process_code,get_user_extension,get_contact
 from functools import wraps
 import hashlib
 import json
@@ -16,7 +16,24 @@ class PBXSettings(Document):
 		for webhook_filter in self.webhook_events:
 			type_filters.append({"type":webhook_filter.event_type_filter,"filter_code":webhook_filter.event_filter,"action_code":webhook_filter.event_action})
 		self.db_set('webhook_event_filter',str(type_filters),False,False,True)	
+	
+	def get_contact_for_cdr(self):
+		for cdr in frappe.get_all('PBX CDRs',filters=[['related_doctype_id','=',None],['pbx','=',self.name],['num_tries_get_contact','<=',self.num_tries_get_contact]],fields=['name']):
+			cdr_doc=frappe.get_doc("PBX CDRs",cdr.name)
+			updates={"num_tries_get_contact":cdr_doc.num_tries_get_contact+1}
+			if cdr_doc.call_type =='Inbound':
+				contact=get_contact(str(cdr_doc.call_from_number))
+		 
+			if contact is not None :
+				updates.update({"related_doctype_id":contact})
+			else:
+				contact=get_contact(str(cdr_doc.call_to_number))
+				if contact is not None :
+					updates.update({"related_doctype_id":contact})
 		
+			print(updates)
+			frappe.db.set_value(cdr_doc.doctype, cdr_doc.name, updates)
+		frappe.db.commit()
 	def get_phonebooks_to_sync(self):
 		for phonebook_sync in self.pbx_contact_sync:
 			if phonebook_sync.disable == 0 :

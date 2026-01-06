@@ -42,42 +42,39 @@ def incoming_call():
 			# 6. Compare (Securely)
 			# hmac.compare_digest is better than '==' because it prevents timing attacks
 			if hmac.compare_digest(computed_signature, received_signature):
+				
 				find_secret=True
 				pbx=frappe.get_doc('PBX Settings',secret.get('pbx'))
 				event_filter= ast.literal_eval(pbx.webhook_event_filter)
 				raw_data = frappe.request.get_data(as_text=True)
 				json_data = frappe.request.get_json(silent=True) 
-
-				 
+				with open(file_name, 'a') as file:
+					file.write("--- NEW REQUEST ---\n")
+					file.write(f"Raw Data: {raw_data}\n")					 
+					file.write("---------------------------------------------------------------------------------------------")
+					
 				form_data = frappe.form_dict				 
 				associated = [v for v in event_filter if v.get('type') == str(json_data.get('type'))]
 				if len(associated) ==1 :
 					# Log success (Optional)
 					# frappe.log_error("Signature Verified", "Yeastar Webhook")
 					ggg=execute_code(associated[0].get('filter_code'),str(json_data))
-					with open(file_name, 'a') as file:
-						file.write("--- NEW REQUEST ---\n")
+					
+						
 						#file.write(str(len(associated))+"\n")
 						#file.write(str(associated[0].get('filter_code'))+"\n")
 						#file.write(str(json_data)+"\n")
-						file.write(str(ggg)+"\n")
-						if ggg['result']==True:
+						 
+					if ggg['result']==True:
 							abv=execute_code(associated[0].get('action_code'),str(json_data))
-							file.write(str(associated[0].get('action_code'))+"\n") 
-							file.write(str(abv)+"\n")
+							
 						# Log JSON if it exists
-						if json_data:
-							
-							
-							file.write(f"JSON Data: {str(json_data.get('type'))}  \n")
-						else:
-							file.write("No JSON Data found.\n")
-
+					
 						# Log Raw Data (useful for debugging)
-						file.write(f"Raw Data: {raw_data}\n")
+						
 						
 						# Log Form Data
-						file.write(f"Form Dict: {str(form_data)}\n")
+					
 
 						
 					# Return success to Yeastar

@@ -38,6 +38,7 @@
   "create_phonebook_api",
   "create_phonebook_method",
   "get_cdrs_api_by_datetime",
+  "num_tries_get_contact",
   "contacts_sync_section",
   "pbx_contact_sync",
   "security_section",
@@ -316,12 +317,17 @@
    "fieldname": "webhook_event_filter",
    "fieldtype": "Long Text",
    "label": "Webhook Event Filter"
+  },
+  {
+   "fieldname": "num_tries_get_contact",
+   "fieldtype": "Int",
+   "label": "Number of Tries to Get Contact"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-15 13:42:29.898420",
+ "modified": "2026-01-03 10:19:10.378289",
  "modified_by": "Administrator",
  "module": "Yealink",
  "name": "PBX Settings",
