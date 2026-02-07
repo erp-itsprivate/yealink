@@ -4,41 +4,48 @@
 import frappe
 import ast,json
 from frappe.model.document import Document
-from yealink.utils import get_contact,get_extension_user,get_extension_email
+from yealink.utils import get_contact,get_extension_user,get_extension_email,normalize_syria_number
 from frappe.desk.form.assign_to import add 
+from frappe.utils import escape_html
 
 class PBXCDRs(Document):
 	def create_task_for_notanswered(self):
 		self.reload()
-		if self.disposition != 'ANSWERED':		
+		
+		pbx=frappe.get_doc('PBX Settings',self.pbx)
+		assigned_to_list=[v.usr for v in pbx.not_answered_users]
 			
-			assigned_to=get_extension_user(self.call_to_number)
-			if assigned_to != False :
-			 
-				description = f"Call From : {str(self.call_from_number)} To {str(self.call_to_number)} and the status is {self.disposition}"
-				 
-				task = frappe.get_doc({
-				"doctype": "Task",
-				"subject": "Call",
-				"description": description,
+		assigned_to=get_extension_user(self.call_to_number)
+		
+		
+		description = f"Call From #({str(self.call_from_number)}) " 
 			
-				"status": "Open"
-				})
-
-			# Insert into DB
-				task.insert(ignore_permissions=True)
-				assigned_to_list=[]
-				assigned_to_list.append(assigned_to)
-			# Assign to a user if provided
-			
-				add({
-					"assign_to": assigned_to_list, 
-					"doctype": "Task",
-					"name": task.name,
-					"description": 'ddd',
-					"priority": task.priority
-				})
-				frappe.db.commit()
+		task = frappe.get_doc({
+		"doctype": "Task",
+		"subject": f"Call From {str(self.call_from_number)} " ,
+		"description": description,
+	
+		"status": "Open"
+		})
+		print(assigned_to_list)
+		print(self.call_from_number)
+	# Insert into DB
+		task.insert(ignore_permissions=True)
+		if assigned_to != 0:
+			assigned_to_list.append(assigned_to)
+	# Assign to a user if provided
+	
+		add({
+			"assign_to": assigned_to_list, 
+			"doctype": "Task",
+			"name": task.name,
+			"description": description,
+			"priority": task.priority
+		})
+		frappe.db.sql(""" 
+		 update `tabPBX CDRs` set task_created =1  where call_id =%s 
+		""", (self.call_id))		
+		frappe.db.commit()
 
 	
 		
@@ -48,9 +55,9 @@ class PBXCDRs(Document):
 			data= ast.literal_eval(str(self.full_data))
 		except Exception as e :
 			data=json.loads(str(self.full_data))	 
-	
+		
 		updates= {
-			"cdr_id" : str(data.get('id')) or "NA",
+			"cdr_id" : str(data.get('id')) if  str(data.get('id')) != 'None' else str(data.get('new_id'))    or "NA",
 		"uid": str(data.get('uid'))  or "NA",
 		"call_from": str(data.get('call_from')) or "NA",
 		"call_to": str(data.get('call_to')) or "NA",
@@ -63,8 +70,8 @@ class PBXCDRs(Document):
 		"disposition":str(data.get('disposition')) or "NA",
 		"call_type":str(data.get('call_type')) or "NA",
 		"reason":str(data.get('reason') ) or "NA",
-		"call_from_number":str(data.get('call_from_number')) or "NA",
-		"call_to_number":str(data.get('call_to_number') )or "NA",
+		"call_from_number":normalize_syria_number(str(data.get('call_from_number'))) or "NA",
+		"call_to_number":normalize_syria_number(str(data.get('call_to_number') ))or "NA",
 		"call_from_name":str(data.get('call_from_name')) or "NA",
 		"call_to_name":str(data.get('call_to_name')) or "NA",
 		"call_note":str(data.get('call_note')) or "NA",
@@ -79,18 +86,18 @@ class PBXCDRs(Document):
 
 		}
 		if str(data.get('call_type')) =='Inbound':
-			contact=get_contact(str(data.get('call_from_number')))
+			contact=get_contact(normalize_syria_number(str(data.get('call_from_number'))))
 		 
 			if contact is not None :
-				updates.update({"related_doctype_id":contact})
+				updates.update({"related_doctype_id":contact.name,"related_doctype":contact.doctype})
 		else:
-			contact=get_contact(str(data.get('call_to_number')))
+			contact=get_contact(normalize_syria_number(str(data.get('call_to_number'))))
 			if contact is not None :
-				updates.update({"related_doctype_id":contact})
-		
+				updates.update({"related_doctype_id":contact.name,"related_doctype":contact.doctype})
+		print(updates)
 		
 		frappe.db.set_value(self.doctype, self.name, updates)
-		self.create_task_for_notanswered()
+		#self.create_task_for_notanswered()
 	
 
 
@@ -106,10 +113,10 @@ def get_phone_cdrs(incoming,outgoing,number):
 		return cdrs
 
 
-def get_phone_cdrs_by_cdrid(number):	
+def get_phone_cdrs_by_cdrid(number,limit):	
 	from datetime import datetime
-	all_cdrs= frappe.get_all('PBX CDRs',or_filters=[[ "call_to_number", "=", '0997777073'],[ "call_from_number", "=", '0997777073']],fields=['call_id'],order_by='cdr_id desc',distinct=True,limit=3,pluck='call_id')
-	cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id desc',fields=['call_type','related_doctype_id','company','call_from_number','call_to_number','talk_duration','disposition','call_id','cdr_id','cdr_time'])
+	all_cdrs= frappe.get_all('PBX CDRs',or_filters=[[ "call_to_number", "=", number],[ "call_from_number", "=", number]],fields=['call_id'],order_by='cdr_id desc',distinct=True,limit=limit,pluck='call_id')
+	cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id',fields=['call_type','related_doctype_id','company','call_from_name','talk_duration','disposition','call_to_name','call_id','cdr_id','cdr_time'])
 	docs = [ {**d, "creation": datetime.strptime(d["cdr_time"], "%d/%m/%Y %H:%M:%S") } for d in cdrs ]
 	return docs
 

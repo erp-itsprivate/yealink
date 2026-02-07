@@ -49,7 +49,7 @@ def incoming_call():
 				raw_data = frappe.request.get_data(as_text=True)
 				json_data = frappe.request.get_json(silent=True) 
 				with open(file_name, 'a') as file:
-					file.write("--- NEW REQUEST ---\n")
+					file.write("--- NEW REQUEST ---\n"+str(frappe.utils.get_datetime()))
 					file.write(f"Raw Data: {raw_data}\n")					 
 					file.write("---------------------------------------------------------------------------------------------")
 					
@@ -103,7 +103,51 @@ def get_lead_from_number(phone_number):
         if len(data)==1 :
             return data[0]
         
+def get_call_path(call_id):	
+	#data = frappe.db.sql( "SELECT GROUP_CONCAT(path ORDER BY name SEPARATOR '/') AS result FROM `tabPBX API Events` WHERE sn = %s GROUP BY sn ", (call_id) ,as_dict=True)
+	data=frappe.db.sql("SELECT path  AS result  FROM `tabPBX API Events` WHERE sn = %s  order by creation desc limit 1",(call_id) ,as_dict=True)
+	return data[0].result
 
+def create_task_for_missed_calls():
+	data=frappe.db.sql(""" 
+		select call_id,min(call_from),min(name) name from  `tabPBX CDRs` where call_id not  in (
+		select call_id from  `tabPBX CDRs` where length(call_to_number)=3 and disposition='ANSWERED'
+			and  call_type ='Inbound'
+		)
+		and  call_type ='Inbound'
+		and task_created =0
+		and call_from_number != 'Unknown'
+ 
+		and    STR_TO_DATE(cdr_time, '%d/%m/%Y')  >= NOW() - INTERVAL 2 DAY
+		group by call_id
+		
+ 
+		""",as_dict=1)
+	for cdr in data:
+		cdr_doc=frappe.get_doc('PBX CDRs',cdr.name)
+		cdr_doc.create_task_for_notanswered()
+
+def normalize_syria_number(number):
+	import re
+	if (number is not None and number != ''):
+		return re.sub(r'^0(?![0])', '00963', number)
+	else:
+		return 
+
+def get_replaced_path(path,company):
+	# import fnmatch
+	# for conf_path in frappe.get_all('PBX IVR',filters=[['company','=',company]],fields=['path','department']):
+	# 	if fnmatch.fnmatch(path, conf_path['path']):
+	# 		return conf_path['department']
+	# 	else:
+	# 		return "Unknown Department" 
+	 
+	if len(frappe.get_all('PBX IVR',filters=[['company','=',company],['path','=',path]],fields=['department'])) == 1 :
+	 
+		return frappe.get_all('PBX IVR',filters=[['company','=',company],['path','=',path]],fields=['department'])[0].get('department')
+	else:
+		return "Unknown Department" 
+	
 @frappe.whitelist( allow_guest=True,methods=["POST"])
 def incoming_call2():
 	file_name = "my_file.txt"
@@ -201,10 +245,18 @@ def get_extension_email(extension_number):
 		return False
 
 def get_contact(phone_number):
-	if frappe.db.exists('Contact Phone', {'phone' : phone_number}):
-		return frappe.get_doc('Contact Phone',{'phone' : phone_number}).parent
-	elif frappe.db.exists('Contact Phone', {'phone' : '9639'+phone_number}):
-		return frappe.get_doc('Contact Phone',{'phone' :'9639'+ phone_number}).parent
+	# if frappe.db.exists('Contact Phone', {'phone' : phone_number}):
+	# 	return frappe.get_doc('Contact Phone',{'phone' : phone_number}).parent
+	# elif frappe.db.exists('Contact Phone', {'phone' : '9639'+phone_number}):
+	# 	return frappe.get_doc('Contact Phone',{'phone' :'9639'+ phone_number}).parent
+	# else:
+	# 	return None
+	lead=frappe.get_all('Lead',or_filters=[[ "phone_ext", "=", phone_number],[ "phone", "=", phone_number],[ "whatsapp_no", "=", phone_number],[ "mobile_no", "=", phone_number],[ "custom_additional_mobile", "=", phone_number],[ "custom_additional_phone", "=", phone_number]],pluck='name')
+	if len(lead) > 0 :
+		if frappe.db.exists('Lead', lead[0]):
+			return frappe.get_doc('Lead',lead[0])
+		else:
+			return None
 	else:
 		return None
 	
@@ -232,7 +284,7 @@ def retry_on_token_expiry(func):
 					print(f"Error parsing JSON during retry check: {e}")
 
 			# 5. Return the final result
-			return res
+			return res.json()
 		return wrapper
 
 def integrate(url,token=None,req_data=None,query_params=None,method="GET"):

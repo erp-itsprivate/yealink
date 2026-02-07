@@ -15,8 +15,9 @@
   "column_break_dufk",
   "username",
   "password",
-  "last_cdr_data",
+  "last_cdr_date",
   "diff_time_to_sync",
+  "not_answered_users",
   "apis_section",
   "get_token_url",
   "get_token_method",
@@ -39,6 +40,10 @@
   "create_phonebook_method",
   "get_cdrs_api_by_datetime",
   "num_tries_get_contact",
+  "get_extension_api",
+  "get_extension_method",
+  "get_extension_stat_api",
+  "get_extension_stat_method",
   "contacts_sync_section",
   "pbx_contact_sync",
   "security_section",
@@ -282,11 +287,6 @@
    "label": "CDR Page Size"
   },
   {
-   "fieldname": "last_cdr_data",
-   "fieldtype": "Datetime",
-   "label": "Last CDRs Date"
-  },
-  {
    "fieldname": "get_cdrs_api_by_datetime",
    "fieldtype": "Data",
    "label": "GET CDRs API DateTime"
@@ -322,12 +322,45 @@
    "fieldname": "num_tries_get_contact",
    "fieldtype": "Int",
    "label": "Number of Tries to Get Contact"
+  },
+  {
+   "fieldname": "get_extension_api",
+   "fieldtype": "Data",
+   "label": "Get Extensions API"
+  },
+  {
+   "fieldname": "get_extension_method",
+   "fieldtype": "Select",
+   "label": "Get Extensions Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "get_extension_stat_api",
+   "fieldtype": "Data",
+   "label": "Get Extenstion Status API"
+  },
+  {
+   "fieldname": "get_extension_stat_method",
+   "fieldtype": "Select",
+   "label": "Get Extension Status Method",
+   "options": "GET\nPOST\nPUT"
+  },
+  {
+   "fieldname": "last_cdr_date",
+   "fieldtype": "Datetime",
+   "label": "Last CDRs Date"
+  },
+  {
+   "fieldname": "not_answered_users",
+   "fieldtype": "Table MultiSelect",
+   "label": "Not Answered Users",
+   "options": "Not Answered Users"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-03 10:19:10.378289",
+ "modified": "2026-01-29 14:33:01.506249",
  "modified_by": "Administrator",
  "module": "Yealink",
  "name": "PBX Settings",

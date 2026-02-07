@@ -4,6 +4,7 @@
 import frappe
 from frappe.model.document import Document
 from yealink.utils import integrate,retry_on_token_expiry,process_code,get_user_extension,get_contact
+from frappe.utils import get_datetime
 from functools import wraps
 import hashlib
 import json
@@ -17,6 +18,47 @@ class PBXSettings(Document):
 			type_filters.append({"type":webhook_filter.event_type_filter,"filter_code":webhook_filter.event_filter,"action_code":webhook_filter.event_action})
 		self.db_set('webhook_event_filter',str(type_filters),False,False,True)	
 	
+	@retry_on_token_expiry	
+	def get_extension_id(self):
+		get_extension_url=self.url+self.get_extension_api
+		query_params = {
+					"access_token":self.pbx_token,		
+			}
+		res=integrate(url=get_extension_url,token=None,req_data=None,query_params=query_params,method=self.get_extension_method)
+		
+		 
+		if res.json().get('errcode') == 0 :			
+				for data in  res.json().get('data'):
+					print(data.get('number'))
+					if frappe.db.exists("PBX User Extension", {"disabled":0,"pbx_ext":data.get('number')}):
+						user_ext=frappe.get_doc("PBX User Extension", {"disabled":0,"pbx_ext":data.get('number')})
+						user_ext.db_set('pbx_id',data.get('id'),False,False,True)
+        
+					
+		return res
+	
+	
+	@retry_on_token_expiry
+	def get_ext_stat(self,extension_number):
+		get_ext_stat_url=self.url+self.get_extension_stat_api
+		
+		pbx_ext=frappe.get_all("PBX User Extension",fields=['name','pbx_id'], filters=[["disabled","=",0],["pbx_ext","=",extension_number],['pbx_id', '!=',None]])[0]
+		query_params = {
+						"access_token":self.pbx_token,	
+						"id": pbx_ext.pbx_id,
+
+				}
+		 
+			 
+		res=integrate(url=get_ext_stat_url,token=None,req_data=None,query_params=query_params,method=self.get_extension_stat_method)
+		
+		if res.json().get('errcode') == 0  :
+				status=res.json().get('data').get('presence_status')
+				print(res.json().get('data').get('presence_status'))
+				frappe.db.set_value("PBX User Extension", pbx_ext.name, "status", status, update_modified=False)
+				frappe.db.commit()
+		return res	
+		
 	def get_contact_for_cdr(self):
 		for cdr in frappe.get_all('PBX CDRs',filters=[['related_doctype_id','=',None],['pbx','=',self.name],['num_tries_get_contact','<=',self.num_tries_get_contact]],fields=['name']):
 			cdr_doc=frappe.get_doc("PBX CDRs",cdr.name)
@@ -34,6 +76,7 @@ class PBXSettings(Document):
 			print(updates)
 			frappe.db.set_value(cdr_doc.doctype, cdr_doc.name, updates)
 		frappe.db.commit()
+	@frappe.whitelist()
 	def get_phonebooks_to_sync(self):
 		for phonebook_sync in self.pbx_contact_sync:
 			if phonebook_sync.disable == 0 :
@@ -185,20 +228,23 @@ class PBXSettings(Document):
 		frappe.db.commit()
 
 		return res
-	 						
+	
+	@frappe.whitelist() 						
 	def get_cdrs_by_date(self):
-		if self.last_cdr_data is None:
-			self.last_cdr_data=frappe.utils.get_datetime()
+		
+		if self.last_cdr_date is None:
+			self.last_cdr_date=frappe.utils.get_datetime()
 			self.get_all_cdrs()
 			
 			
 		else:
-			diff= frappe.utils.get_datetime() -self.last_cdr_data 
+			diff= frappe.utils.get_datetime() - get_datetime(self.last_cdr_date) 
 			 
 			if int(diff.total_seconds()/60) >= self.diff_time_to_sync:
 				self.get_cdrs(page=None)
 		print('conmit')
 		frappe.db.commit()
+		return "SUCCESS"
 
 	@retry_on_token_expiry						
 	def get_all_cdrs(self):
@@ -222,7 +268,7 @@ class PBXSettings(Document):
 						count_of_call_cdr=count_of_call_cdr+1
 					print(count_of_call_cdr)
 					for i in range(count_of_call_cdr):
-						print('in loop' + str(i))
+						print('in loop ---------------------------------------------------' + str(i))
 						self.get_cdrs(i+1)
 		return res	
 
@@ -243,7 +289,7 @@ class PBXSettings(Document):
 			res=integrate(url=get_cdrs_url,token=None,req_data=None,query_params=query_params,method=self.get_cdrs_method)
 		else:
 			get_cdrs_url=self.url+self.get_cdrs_api_by_datetime
-			start_time=self.last_cdr_data.replace(hour=0, minute=0, second=0).timestamp()
+			start_time=get_datetime(self.last_cdr_date).replace(hour=0, minute=0, second=0).timestamp()
 			end_time=frappe.utils.get_datetime().replace(hour=23, minute=59, second=59).timestamp()
 			
 
@@ -262,12 +308,13 @@ class PBXSettings(Document):
 				 
 					self.db_set('total_cdrs',res.json().get('total_number'),False,False,True)
 					 
-					self.db_set('last_cdr_data',frappe.utils.get_datetime(),False,False,True)
+					self.db_set('last_cdr_date',frappe.utils.get_datetime(),False,False,True)
 					
-					print(self.last_cdr_data)	
+					print(self.last_cdr_date)	
 					for data in  res.json().get('data'):
 						if self.filter_cdr_code is not None and len(self.filter_cdr_code) > 0 :
 							if process_code(self.filter_cdr_code,str(data))==True :
+								print( str(data))
 								doc = frappe.get_doc({
 										'doctype': 'PBX CDRs',
 										'pbx':self.name,
@@ -276,7 +323,7 @@ class PBXSettings(Document):
 									})
 								try:
 									doc.insert()
-									print(doc.name)
+									#print(doc.name)
 								except   pymysql.err.IntegrityError as e:
 									
 									frappe.db.rollback()
@@ -333,9 +380,10 @@ class PBXSettings(Document):
 		
 		frappe.db.commit()
 
-
+	@frappe.whitelist()
 	@retry_on_token_expiry
 	def get_phonebooks(self):
+		self.delete_phonebooks()
 		get_phonebooks_url=self.url+self.get_phonebook_api
 		query_params = {
 					"access_token":self.pbx_token,		
@@ -359,7 +407,10 @@ class PBXSettings(Document):
             })
 		self.save()
 		frappe.db.commit()
-
+	
+	
+	 
+	@frappe.whitelist()
 	@retry_on_token_expiry
 	def create_phonebooks(self,phonebook_name):
 		create_phonebooks_url=self.url+self.create_phonebook_api

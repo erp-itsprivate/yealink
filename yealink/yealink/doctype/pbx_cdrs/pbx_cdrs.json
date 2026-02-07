@@ -7,6 +7,8 @@
  "field_order": [
   "pbx_section",
   "pbx",
+  "task_created",
+  "column_break_wwey",
   "related_doctype",
   "related_doctype_id",
   "data_section",
@@ -191,7 +193,6 @@
    "label": "Ring Duration"
   },
   {
-   "default": "Contact",
    "fieldname": "related_doctype",
    "fieldtype": "Link",
    "label": "Related Doctype",
@@ -224,12 +225,22 @@
    "fieldname": "num_tries_get_contact",
    "fieldtype": "Int",
    "label": "Number of Tries to Get Contact"
+  },
+  {
+   "default": "0",
+   "fieldname": "task_created",
+   "fieldtype": "Check",
+   "label": "Task Created"
+  },
+  {
+   "fieldname": "column_break_wwey",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-03 10:22:57.716238",
+ "modified": "2026-02-02 12:24:10.396840",
  "modified_by": "Administrator",
  "module": "Yealink",
  "name": "PBX CDRs",

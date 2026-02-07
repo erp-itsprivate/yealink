@@ -1,56 +1,36 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:pbx_user",
- "creation": "2025-12-04 10:05:35.166584",
+ "creation": "2026-01-19 13:28:59.388723",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "pbx_user",
-  "pbx",
-  "user_exts"
+  "ivr"
  ],
  "fields": [
   {
-   "fieldname": "pbx_user",
-   "fieldtype": "Link",
-   "label": "User",
-   "options": "User",
-   "unique": 1
-  },
-  {
-   "fieldname": "user_exts",
+   "fieldname": "ivr",
    "fieldtype": "Table",
-   "label": "User Extensions",
-   "options": "PBX User Extension"
-  },
-  {
-   "fieldname": "pbx",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "PBX",
-   "options": "PBX Settings",
-   "reqd": 1
+   "label": "IVR",
+   "options": "PBX IVR"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
+ "issingle": 1,
  "links": [],
- "modified": "2026-01-28 10:50:48.139553",
+ "modified": "2026-01-19 13:29:18.242403",
  "modified_by": "Administrator",
  "module": "Yealink",
- "name": "PBX User",
- "naming_rule": "By fieldname",
+ "name": "PBX Paths",
  "owner": "Administrator",
  "permissions": [
   {
    "create": 1,
    "delete": 1,
    "email": 1,
-   "export": 1,
    "print": 1,
    "read": 1,
-   "report": 1,
    "role": "System Manager",
    "share": 1,
    "write": 1
