@@ -8,7 +8,11 @@ import hmac
 import hashlib
 import base64
 from types import SimpleNamespace
+logger = frappe.logger("Yealink", allow_site=True, file_count=100)
+logger.setLevel(20)
 
+logger_exception = frappe.logger("Yealink.error", allow_site=True, file_count=50)
+logger_exception.setLevel(20)
 
 @frappe.whitelist( allow_guest=True,methods=["POST"])
 def incoming_call():
@@ -16,7 +20,7 @@ def incoming_call():
 		# 1. Get the Secret Key (Store this in site_config or a Settings Doctype)
 		# For now, we assume it is a string
 		find_secret=False
-		file_name = "my_file.txt"
+		#file_name = "my_file.txt"
 		for secret in frappe.get_all('PBX Secret Settings', filters={"enabled":True},fields=['pbx','webhook_secret']):
 			secret_key=secret.get('webhook_secret')
 			# 2. Get the Signature from the Header
@@ -48,11 +52,11 @@ def incoming_call():
 				event_filter= ast.literal_eval(pbx.webhook_event_filter)
 				raw_data = frappe.request.get_data(as_text=True)
 				json_data = frappe.request.get_json(silent=True) 
-				with open(file_name, 'a') as file:
-					file.write("--- NEW REQUEST ---\n"+str(frappe.utils.get_datetime()))
-					file.write(f"Raw Data: {raw_data}\n")					 
-					file.write("---------------------------------------------------------------------------------------------")
-					
+				#with open(file_name, 'a') as file:
+				##	file.write("--- NEW REQUEST ---\n"+str(frappe.utils.get_datetime()))
+				##	file.write(f"Raw Data: {raw_data}\n")					 
+				#	file.write("---------------------------------------------------------------------------------------------")
+				logger.info(f"--- NEW REQUEST ---\n Raw Data: {raw_data}\n")	
 				form_data = frappe.form_dict				 
 				associated = [v for v in event_filter if v.get('type') == str(json_data.get('type'))]
 				if len(associated) ==1 :
@@ -91,48 +95,68 @@ def incoming_call():
 				frappe.response.status_code = 401
 				return {"status": "failed", "message": "Invalid Signature"}
 	except Exception as e :
-				 
-				frappe.log_error(message=f"  file => scale_transaction.py method =>  on_update   {frappe.get_traceback()} ", title="Yealink") 
+				logger_exception.error(f" file => utils.py method =>  incoming_call  raw_data  {raw_data} {frappe.get_traceback()} ")
+				frappe.log_error(message=f" file => utils.py method =>  incoming_call  raw_data  {raw_data} {frappe.get_traceback()} ", title="Yealink") 
 
 	
 
 def get_lead_from_number(phone_number):
-    if frappe.db.exists('Contact Phone',{'phone':phone_number}):
-        contact=frappe.get_doc('Contact Phone',{'phone':phone_number}).parent
-        data=frappe.get_all('Dynamic Link', filters=[["parenttype",'=','Contact'],['parentfield','=','links'],['parent','=',contact],['link_doctype','=','Lead']],fields=['link_name'],limit=1,pluck='link_name')
-        if len(data)==1 :
-            return data[0]
+	try:
+		if frappe.db.exists('Contact Phone',{'phone':phone_number}):
+			contact=frappe.get_doc('Contact Phone',{'phone':phone_number}).parent
+			data=frappe.get_all('Dynamic Link', filters=[["parenttype",'=','Contact'],['parentfield','=','links'],['parent','=',contact],['link_doctype','=','Lead']],fields=['link_name'],limit=1,pluck='link_name')
+			if len(data)==1 :
+				return data[0]
+	except Exception as e :
+				logger_exception.error(f" file => utils.py method =>  get_lead_from_number  phone_number  {phone_number} {frappe.get_traceback()} ")
+				frappe.log_error(message=f" file => utils.py method =>  get_lead_from_number  phone_number  {phone_number} {frappe.get_traceback()} ", title="Yealink") 
+
         
 def get_call_path(call_id):	
+	try:
 	#data = frappe.db.sql( "SELECT GROUP_CONCAT(path ORDER BY name SEPARATOR '/') AS result FROM `tabPBX API Events` WHERE sn = %s GROUP BY sn ", (call_id) ,as_dict=True)
-	data=frappe.db.sql("SELECT path  AS result  FROM `tabPBX API Events` WHERE sn = %s  order by creation desc limit 1",(call_id) ,as_dict=True)
-	return data[0].result
+		data=frappe.db.sql("SELECT path  AS result  FROM `tabPBX API Events` WHERE sn = %s  order by creation desc limit 1",(call_id) ,as_dict=True)
+		return data[0].result
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  get_call_path  call_id  {call_id} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  get_call_path  call_id  {call_id} {frappe.get_traceback()} ", title="Yealink") 
+
 
 def create_task_for_missed_calls():
-	data=frappe.db.sql(""" 
-		select call_id,min(call_from),min(name) name from  `tabPBX CDRs` where call_id not  in (
-		select call_id from  `tabPBX CDRs` where length(call_to_number)=3 and disposition='ANSWERED'
+	try:
+		data=frappe.db.sql(""" 
+			select call_id,min(call_from),min(name) name from  `tabPBX CDRs` where call_id not  in (
+			select call_id from  `tabPBX CDRs` where length(call_to_number)=3 and disposition='ANSWERED'
+				and  call_type ='Inbound'
+			)
 			and  call_type ='Inbound'
-		)
-		and  call_type ='Inbound'
-		and task_created =0
-		and call_from_number != 'Unknown'
- 
-		and    STR_TO_DATE(cdr_time, '%d/%m/%Y')  >= NOW() - INTERVAL 2 DAY
-		group by call_id
-		
- 
-		""",as_dict=1)
-	for cdr in data:
-		cdr_doc=frappe.get_doc('PBX CDRs',cdr.name)
-		cdr_doc.create_task_for_notanswered()
+			and task_created =0
+			and call_from_number != 'Unknown'
+	
+			and    STR_TO_DATE(cdr_time, '%d/%m/%Y')  >= NOW() - INTERVAL 2 DAY
+			group by call_id
+			
+	
+			""",as_dict=1)
+		for cdr in data:
+			cdr_doc=frappe.get_doc('PBX CDRs',cdr.name)
+			cdr_doc.create_task_for_notanswered()
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  create_task_for_missed_calls    {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  create_task_for_missed_calls    {frappe.get_traceback()} ", title="Yealink") 
+
 
 def normalize_syria_number(number):
-	import re
-	if (number is not None and number != ''):
-		return re.sub(r'^0(?![0])', '00963', number)
-	else:
-		return 
+	try:
+		import re
+		if (number is not None and number != ''):
+			return re.sub(r'^0(?![0])', '00963', number)
+		else:
+			return
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  normalize_syria_number  number  {number} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  normalize_syria_number  number  {number} {frappe.get_traceback()} ", title="Yealink") 
+
 
 def get_replaced_path(path,company):
 	# import fnmatch
@@ -141,12 +165,16 @@ def get_replaced_path(path,company):
 	# 		return conf_path['department']
 	# 	else:
 	# 		return "Unknown Department" 
-	 
-	if len(frappe.get_all('PBX IVR',filters=[['company','=',company],['path','=',path]],fields=['department'])) == 1 :
-	 
-		return frappe.get_all('PBX IVR',filters=[['company','=',company],['path','=',path]],fields=['department'])[0].get('department')
-	else:
-		return "Unknown Department" 
+	try:
+		if len(frappe.get_all('PBX IVR',filters=[['company','=',company],['path','=',path]],fields=['department'])) == 1 :
+			
+			return frappe.get_all('PBX IVR',filters=[['company','=',company],['path','=',path]],fields=['department'])[0].get('department')
+		else:
+			return "Unknown Department" 
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  get_replaced_path  path  {path} company {company} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  get_replaced_path  path  {path} company {company} {frappe.get_traceback()} ", title="Yealink") 
+
 	
 @frappe.whitelist( allow_guest=True,methods=["POST"])
 def incoming_call2():
@@ -194,55 +222,79 @@ def incoming_call2():
 	frappe.response['message'] = "Hello from Frappe!"
 
 def execute_code(code,parameter):
-        data= ast.literal_eval(str(parameter))
-		# Convert dict to object
-        doc_obj = SimpleNamespace(**data)
-        _locals = {
-			"params": doc_obj
-		}
-        object_from_code = {}
-        
-        exec(code, _locals, object_from_code)
-        return object_from_code
+		try:
+			data= ast.literal_eval(str(parameter))
+			# Convert dict to object
+			doc_obj = SimpleNamespace(**data)
+			_locals = {
+				"params": doc_obj
+			}
+			object_from_code = {}
+			
+			exec(code, _locals, object_from_code)
+			return object_from_code
+		except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  execute_code  code  {code} parameter {parameter} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  execute_code  code  {code} parameter {parameter} {frappe.get_traceback()} ", title="Yealink") 
+
          
 
 def process_code(code,data_to_validate):
-	tokens = re.findall(r"_VS_[A-Za-z0-9_]+_VS_", code)
-	cleaned = [t.replace("_VS_", "") for t in tokens]
-	data= ast.literal_eval(str(data_to_validate))
+	try:
+		tokens = re.findall(r"_VS_[A-Za-z0-9_]+_VS_", code)
+		cleaned = [t.replace("_VS_", "") for t in tokens]
+		data= ast.literal_eval(str(data_to_validate))
 
-	replacement={}
-	for i in range(len(tokens)) :
-		replacement.update({tokens[i]:data.get(cleaned[i])})
-	for key, value in replacement.items():
-		if isinstance(value, str):
-			replace_with = repr(value)
-		else:
-			replace_with = str(value)
-		code = code.replace(key, replace_with)
-	object_from_code={}
-	global_and_local_variable={}
-	exec(code,global_and_local_variable, object_from_code) 
-	if ('result'  in object_from_code):    
-		return object_from_code['result']
+		replacement={}
+		for i in range(len(tokens)) :
+			replacement.update({tokens[i]:data.get(cleaned[i])})
+		for key, value in replacement.items():
+			if isinstance(value, str):
+				replace_with = repr(value)
+			else:
+				replace_with = str(value)
+			code = code.replace(key, replace_with)
+		object_from_code={}
+		global_and_local_variable={}
+		exec(code,global_and_local_variable, object_from_code) 
+		if ('result'  in object_from_code):    
+			return object_from_code['result']
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  process_code  code  {code}  data_to_validate {data_to_validate} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  process_code  code  {code} data_to_validate {data_to_validate} {frappe.get_traceback()} ", title="Yealink") 
+
 
 def get_extension_user(extension_number):
-	if frappe.db.exists('PBX User Extension',{'pbx_ext' : extension_number}):
-		return frappe.get_doc('PBX User Extension',{'pbx_ext' : extension_number}).parent
-	else:
-		return False
+	try:
+		if frappe.db.exists('PBX User Extension',{'pbx_ext' : extension_number}):
+			return frappe.get_doc('PBX User Extension',{'pbx_ext' : extension_number}).parent
+		else:
+			return False
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  get_extension_user  extension_number  {extension_number} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  get_extension_user  extension_number  {extension_number} {frappe.get_traceback()} ", title="Yealink") 
+
 	
 def get_user_extension(user):
-	if len(frappe.get_all('PBX User Extension',fields=['pbx_ext'],filters={'parent':user,'is_default':1})) ==1 :
-		return frappe.get_all('PBX User Extension',fields=['pbx_ext'],filters={'parent':user,'is_default':1},pluck='pbx_ext')[0]
-	
+	try:
+		if len(frappe.get_all('PBX User Extension',fields=['pbx_ext'],filters={'parent':user,'is_default':1})) ==1 :
+			return frappe.get_all('PBX User Extension',fields=['pbx_ext'],filters={'parent':user,'is_default':1},pluck='pbx_ext')[0]
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  get_user_extension  user  {user} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  get_user_extension  user  {user} {frappe.get_traceback()} ", title="Yealink") 
+
 
 
 def get_extension_email(extension_number):
-	if frappe.db.exists('PBX User Extension',{'pbx_ext' : extension_number}):
-		return frappe.get_doc('User',frappe.get_doc('PBX User Extension',{'pbx_ext' : extension_number}).parent).email
-	else:
-		return False
+	try:
+		if frappe.db.exists('PBX User Extension',{'pbx_ext' : extension_number}):
+			return frappe.get_doc('User',frappe.get_doc('PBX User Extension',{'pbx_ext' : extension_number}).parent).email
+		else:
+			return False
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  get_extension_email  extension_number  {extension_number} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  get_extension_email  extension_number  {extension_number} {frappe.get_traceback()} ", title="Yealink") 
+
 
 def get_contact(phone_number):
 	# if frappe.db.exists('Contact Phone', {'phone' : phone_number}):
@@ -251,14 +303,19 @@ def get_contact(phone_number):
 	# 	return frappe.get_doc('Contact Phone',{'phone' :'9639'+ phone_number}).parent
 	# else:
 	# 	return None
-	lead=frappe.get_all('Lead',or_filters=[[ "phone_ext", "=", phone_number],[ "phone", "=", phone_number],[ "whatsapp_no", "=", phone_number],[ "mobile_no", "=", phone_number],[ "custom_additional_mobile", "=", phone_number],[ "custom_additional_phone", "=", phone_number]],pluck='name')
-	if len(lead) > 0 :
-		if frappe.db.exists('Lead', lead[0]):
-			return frappe.get_doc('Lead',lead[0])
+	try:
+		lead=frappe.get_all('Lead',or_filters=[[ "phone_ext", "=", phone_number],[ "phone", "=", phone_number],[ "whatsapp_no", "=", phone_number],[ "mobile_no", "=", phone_number],[ "custom_additional_mobile", "=", phone_number],[ "custom_additional_phone", "=", phone_number]],pluck='name')
+		if len(lead) > 0 :
+			if frappe.db.exists('Lead', lead[0]):
+				return frappe.get_doc('Lead',lead[0])
+			else:
+				return None
 		else:
 			return None
-	else:
-		return None
+	except Exception as e :
+			logger_exception.error(f" file => utils.py method =>  get_contact  phone_number  {phone_number} {frappe.get_traceback()} ")
+			frappe.log_error(message=f" file => utils.py method =>  get_contact  phone_number  {phone_number} {frappe.get_traceback()} ", title="Yealink") 
+
 	
 def retry_on_token_expiry(func):
 		@wraps(func)
@@ -288,23 +345,27 @@ def retry_on_token_expiry(func):
 		return wrapper
 
 def integrate(url,token=None,req_data=None,query_params=None,method="GET"):
-            headers=None
-            url = url
-            if token != None:
+			try:
+				headers=None
+				url = url
+				if token != None:
 
-                headers = {                        
-                    "Authorization": token  # Use 'Bearer' for OAuth tokens
-                }
-            
-            data={}
-            if req_data != None:
-                for key,value in req_data.items():                           
-                    data.update({key:value})
-          
-            if method=="GET":
-                response = requests.get(url=url.rstrip(), json=data, headers=headers,params=query_params)
-            if method=="POST":
-                response = requests.post(url=url.rstrip(), json=data, headers=headers,params=query_params)
+					headers = {                        
+						"Authorization": token  # Use 'Bearer' for OAuth tokens
+					}
+				
+				data={}
+				if req_data != None:
+					for key,value in req_data.items():                           
+						data.update({key:value})
+			
+				if method=="GET":
+					response = requests.get(url=url.rstrip(), json=data, headers=headers,params=query_params)
+				if method=="POST":
+					response = requests.post(url=url.rstrip(), json=data, headers=headers,params=query_params)
 
 
-            return response
+				return response
+			except Exception as e :
+				logger_exception.error(f" file => utils.py method =>  integrate  url  {url} query_params {query_params} {frappe.get_traceback()} ")
+				frappe.log_error(message=f" file => utils.py method =>  integrate  url  {url} query_params {query_params} {frappe.get_traceback()} ", title="Yealink") 
