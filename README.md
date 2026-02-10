@@ -1,4 +1,4 @@
-### Yealink
+### Yealink(App)
 
 Yeastar PBX Integration
 
