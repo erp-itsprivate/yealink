@@ -212,6 +212,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Company",
    "options": "Company"
   },
@@ -240,7 +241,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-02 12:24:10.396840",
+ "modified": "2026-02-09 16:15:31.796067",
  "modified_by": "Administrator",
  "module": "Yealink",
  "name": "PBX CDRs",

@@ -11,7 +11,8 @@ class PBXPhoneBookSync(Document):
 
 
 	def on_update(self):
-		self.sync()
+		#self.sync()
+		pass
 
 
 	def sync(self):
@@ -19,10 +20,11 @@ class PBXPhoneBookSync(Document):
 			print("sync")
 			pbx_setting=frappe.get_doc('PBX Settings',self.pbx)
 			pbx_setting.get_phonebooks()
-			
-			if len(frappe.get_all("PBX PhoneBooks", fields=["*"], filters = {"parent":pbx_setting.name,"phonebook_name":self.phonebook})) ==1 : 
+			if len(frappe.get_all("PBX PhoneBooks", fields=["*"], filters = {"parent":pbx_setting.name,"phonebook_name":self.phonebook})) ==1 : 	
 				phonebook_id=frappe.get_all("PBX PhoneBooks", fields=["*"], filters = {"parent":pbx_setting.name,"phonebook_name":self.phonebook})[0]["id"]
+				
 				contacts=frappe.get_all("PBX Contacts Synced", fields=["*"], filters = {"parent":self.name,"synced":0,"status":"NEW"})
+				 
 				for contact in contacts:
 				
 					pbx_setting.create_contact(contact,phonebook_id)
@@ -39,7 +41,7 @@ class PBXPhoneBookSync(Document):
 				print("contacts is " + str(new_contacts))
 				
 				self.db_set('total_contacts',new_contacts,False,False,True)         
-				pbx_setting.delete_phonebooks()
+				
 				pbx_setting.get_phonebooks()
 		except Exception as e :
 				logger_exception.error(f" file => pbx_phonebook_sync.py method =>  sync  self  {self} {frappe.get_traceback()} ")

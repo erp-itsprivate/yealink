@@ -93,12 +93,12 @@ class PBXCDRs(Document):
 
 		}
 		if str(data.get('call_type')) =='Inbound':
-			contact=get_contact(normalize_syria_number(str(data.get('call_from_number'))))
+			contact=get_contact(normalize_syria_number(str(data.get('call_from_number'))),updates.get("company"))
 		
 			if contact is not None :
 				updates.update({"related_doctype_id":contact.name,"related_doctype":contact.doctype})
 		else:
-			contact=get_contact(normalize_syria_number(str(data.get('call_to_number'))))
+			contact=get_contact(normalize_syria_number(str(data.get('call_to_number'))),updates.get("company"))
 			if contact is not None :
 				updates.update({"related_doctype_id":contact.name,"related_doctype":contact.doctype})
 		print(updates)
@@ -130,9 +130,11 @@ def get_phone_cdrs(incoming,outgoing,number):
 def get_phone_cdrs_by_cdrid(number,limit):	
 	try:
 		from datetime import datetime
+		docs=[]
 		all_cdrs= frappe.get_all('PBX CDRs',or_filters=[[ "call_to_number", "=", number],[ "call_from_number", "=", number]],fields=['call_id'],order_by='cdr_id desc',distinct=True,limit=limit,pluck='call_id')
-		cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id',fields=['call_type','related_doctype_id','company','call_from_name','talk_duration','disposition','call_to_name','call_id','cdr_id','cdr_time'])
-		docs = [ {**d, "creation": datetime.strptime(d["cdr_time"], "%d/%m/%Y %H:%M:%S") } for d in cdrs ]
+		if len(all_cdrs) > 0:
+			cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id',fields=['call_type','related_doctype_id','company','call_from_name','talk_duration','disposition','call_to_name','call_id','cdr_id','cdr_time'])
+			docs = [ {**d, "creation": datetime.strptime(d["cdr_time"], "%d/%m/%Y %H:%M:%S") } for d in cdrs ]
 		return docs
 	except Exception as e :
 			logger_exception.error(f" file => pbx_cdrs.py method =>  get_phone_cdrs_by_cdrid  number  {number} limit  {limit}   {frappe.get_traceback()} ")

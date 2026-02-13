@@ -296,7 +296,7 @@ def get_extension_email(extension_number):
 			frappe.log_error(message=f" file => utils.py method =>  get_extension_email  extension_number  {extension_number} {frappe.get_traceback()} ", title="Yealink") 
 
 
-def get_contact(phone_number):
+def get_contact(phone_number,company):
 	# if frappe.db.exists('Contact Phone', {'phone' : phone_number}):
 	# 	return frappe.get_doc('Contact Phone',{'phone' : phone_number}).parent
 	# elif frappe.db.exists('Contact Phone', {'phone' : '9639'+phone_number}):
@@ -304,7 +304,7 @@ def get_contact(phone_number):
 	# else:
 	# 	return None
 	try:
-		lead=frappe.get_all('Lead',or_filters=[[ "phone_ext", "=", phone_number],[ "phone", "=", phone_number],[ "whatsapp_no", "=", phone_number],[ "mobile_no", "=", phone_number],[ "custom_additional_mobile", "=", phone_number],[ "custom_additional_phone", "=", phone_number]],pluck='name')
+		lead=frappe.get_all('Lead',filters=[["company","=",company]],or_filters=[[ "phone_ext", "=", phone_number],[ "phone", "=", phone_number],[ "whatsapp_no", "=", phone_number],[ "mobile_no", "=", phone_number],[ "custom_additional_mobile", "=", phone_number],[ "custom_additional_phone", "=", phone_number]],pluck='name')
 		if len(lead) > 0 :
 			if frappe.db.exists('Lead', lead[0]):
 				return frappe.get_doc('Lead',lead[0])
@@ -341,7 +341,7 @@ def retry_on_token_expiry(func):
 					print(f"Error parsing JSON during retry check: {e}")
 
 			# 5. Return the final result
-			return res.json()
+				return res.json()
 		return wrapper
 
 def integrate(url,token=None,req_data=None,query_params=None,method="GET"):
