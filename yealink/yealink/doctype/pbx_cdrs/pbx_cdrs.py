@@ -133,7 +133,7 @@ def get_phone_cdrs_by_cdrid(number,limit):
 		docs=[]
 		all_cdrs= frappe.get_all('PBX CDRs',or_filters=[[ "call_to_number", "=", number],[ "call_from_number", "=", number]],fields=['call_id'],order_by='cdr_id desc',distinct=True,limit=limit,pluck='call_id')
 		if len(all_cdrs) > 0:
-			cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id',fields=['call_type','related_doctype_id','company','call_from_name','talk_duration','disposition','call_to_name','call_id','cdr_id','cdr_time'])
+			cdrs=frappe.get_all('PBX CDRs',filters=[['call_id','in',all_cdrs]],order_by='cdr_id',fields=['call_type','related_doctype_id','company','call_from_name','call_from_number','talk_duration','disposition','call_to_name','call_id','cdr_id','cdr_time'])
 			docs = [ {**d, "creation": datetime.strptime(d["cdr_time"], "%d/%m/%Y %H:%M:%S") } for d in cdrs ]
 		return docs
 	except Exception as e :

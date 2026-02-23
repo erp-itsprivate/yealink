@@ -141,12 +141,12 @@ class PBXSettings(Document):
 									contact.status='NEW'
 									contact.synced=0
 									phones=element.all_phones
-									num_list = [n.strip() for n in phones.split(",")]
+									num_list = [n.strip() for n in phones.split(",") if n.strip()]
 									
 									for i, n in enumerate(num_list, start=1):
 										num_type = mapping.get(i)
 										contact.set(num_type,n)
-									contact.save(ignore_permissions=True)
+									#contact.save(ignore_permissions=True)
 								
 							
 							for sync_contact in doc.synced_contacts:
@@ -160,7 +160,7 @@ class PBXSettings(Document):
 									sync_contact.synced=0
 									sync_contact.save(ignore_permissions=True)
 
-						doc.save(ignore_permissions=True)	
+						#doc.save(ignore_permissions=True)	
 						frappe.db.commit()
 					else:
 						
@@ -170,7 +170,8 @@ class PBXSettings(Document):
 								'pbx':self.name,
 								'sync_name': self.name + '-'+phonebook_sync.address_book			
 							})
-						
+						doc.insert(ignore_permissions=True)	
+						frappe.db.commit()
 						
 						if ('data'  in object_from_code):           
 							data=object_from_code['data']
@@ -198,10 +199,9 @@ class PBXSettings(Document):
 									num_type = mapping.get(i)
 									contact.set(num_type,n)
 								#contact.save(ignore_permissions=True)	
-						doc.insert(ignore_permissions=True)	
-						frappe.db.commit()
-					doc=doc.reload()
-					doc.sync()
+							doc.save()
+					frappe.db.commit()	
+				
 		except Exception as e :
 			logger_exception.error(f" file => pbxsettings.py method =>  get_phonebooks_to_sync  self  {self}   {frappe.get_traceback()} ")
 			frappe.log_error(message=f" file => pbxsettings.py method =>  get_phonebooks_to_sync  self  {self}  {frappe.get_traceback()} ", title="Yealink") 
@@ -214,27 +214,27 @@ class PBXSettings(Document):
 						"access_token":self.pbx_token,		
 				}
 			number_list = []
-			if contact.mobile_number is not None:
+			if contact.mobile_number is not None  and contact.mobile_number != "":
 				number_list.append({
 					"num_type": "mobile_number",
 					"number": contact.mobile_number
 				})
-			if contact.mobile_number2 is not None:
+			if contact.mobile_number2 is not None and contact.mobile_number2 != "" :
 				number_list.append({
 					"num_type": "mobile_number2",
 					"number": contact.mobile_number2
 				})
-			if contact.business_number is not None:
+			if contact.business_number is not None and contact.business_number != "" :
 				number_list.append({
 					"num_type": "business_number",
 					"number": contact.business_number
 				})
-			if contact.business_number2 is not None:
+			if contact.business_number2 is not None and contact.business_number2 != "":
 				number_list.append({
 					"num_type": "business_number2",
 					"number": contact.business_number2
 				})
-			
+			print(number_list)
 			params ={
 					
 					"first_name": contact.first_name,
@@ -395,25 +395,30 @@ class PBXSettings(Document):
 	@retry_on_token_expiry						
 	def delete_contact(self,contact):
 		try:
-			if (contact.pbx_id is not None and contact.pbx_id != "" and contact.pbx_id != 0):
+			if (contact.pbx_id is not None and contact.pbx_id != ""  ):
 				delete_contact_url=self.url+self.delete_contact_api
 				query_params = {
 							"access_token":self.pbx_token,		
 							"id":contact.pbx_id
 					}
 		
-			
-				res=integrate(url=delete_contact_url,token=None,req_data=None,query_params=query_params,method=self.delete_contact_method)
-				print(res.json())
-				if res.status_code==200:
-					if res.json().get('errcode') == 0 :
-						contact_synced=frappe.get_doc('PBX Contacts Synced',contact.name)
-						contact_synced.pbx_id=0 
-						contact_synced.synced=1
-						contact_synced.save()
-				frappe.db.commit()
+				if (contact.pbx_id == 0):
+					contact_synced=frappe.get_doc('PBX Contacts Synced',contact.name)
+					contact_synced.synced=1
+					contact_synced.save()
+				else:
+					res=integrate(url=delete_contact_url,token=None,req_data=None,query_params=query_params,method=self.delete_contact_method)
+					print(res.json())
+					if res.status_code==200:
+						if res.json().get('errcode') == 0 :
+							contact_synced=frappe.get_doc('PBX Contacts Synced',contact.name)
+							contact_synced.pbx_id=0 
+							contact_synced.synced=1
+							contact_synced.save()
+					
 
-				return res
+					return res
+				frappe.db.commit()
 		except Exception as e :
 			logger_exception.error(f" file => pbxsettings.py method =>  delete_contact  self  {self}  contact {contact}   {frappe.get_traceback()} ")
 			frappe.log_error(message=f" file => pbxsettings.py method =>  delete_contact  self  {self} contact {contact}   {frappe.get_traceback()} ", title="Yealink") 

@@ -14,7 +14,18 @@ class PBXPhoneBookSync(Document):
 		#self.sync()
 		pass
 
-
+	def sync_background(self):
+		frappe.enqueue(
+                self.sync, # python function or a module path as string
+            queue="long", # one of short, default, long
+             timeout=None, # pass timeout manually
+            is_async=True, # if this is True, method is run in worker
+             now=False, # if this is True, method is run directly (not in a worker)
+             job_id="job_phonebook_sync "+str(self.name), # specify a job name
+             job_name="job_phonebook_sync "+str(self.name),
+             enqueue_after_commit=False, # enqueue the job after the database commit is done at the end of the request
+             at_front=False, # put the job at the front of the queue
+            )
 	def sync(self):
 		try:
 			print("sync")
@@ -42,7 +53,7 @@ class PBXPhoneBookSync(Document):
 				
 				self.db_set('total_contacts',new_contacts,False,False,True)         
 				
-				pbx_setting.get_phonebooks()
+			pbx_setting.get_phonebooks()
 		except Exception as e :
 				logger_exception.error(f" file => pbx_phonebook_sync.py method =>  sync  self  {self} {frappe.get_traceback()} ")
 				frappe.log_error(message=f" file => pbx_phonebook_sync.py method =>  sync  sync  {self} {frappe.get_traceback()} ", title="Yealink") 

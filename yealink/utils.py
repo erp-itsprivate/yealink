@@ -14,6 +14,9 @@ logger.setLevel(20)
 logger_exception = frappe.logger("Yealink.error", allow_site=True, file_count=50)
 logger_exception.setLevel(20)
 
+logger_warning = frappe.logger("Yealink.warn", allow_site=True, file_count=50)
+logger_warning.setLevel(20)
+
 @frappe.whitelist( allow_guest=True,methods=["POST"])
 def incoming_call():
 	try:
@@ -295,6 +298,7 @@ def get_extension_email(extension_number):
 			logger_exception.error(f" file => utils.py method =>  get_extension_email  extension_number  {extension_number} {frappe.get_traceback()} ")
 			frappe.log_error(message=f" file => utils.py method =>  get_extension_email  extension_number  {extension_number} {frappe.get_traceback()} ", title="Yealink") 
 
+ 
 
 def get_contact(phone_number,company):
 	# if frappe.db.exists('Contact Phone', {'phone' : phone_number}):
@@ -337,6 +341,9 @@ def retry_on_token_expiry(func):
 						# 4. Call the ORIGINAL function again
 						# Because self.pbx_token is updated, the function will pick up the new token
 						res = func(self, *args, **kwargs)
+					if res.json().get('errcode') != 0:
+						logger_warning.error(f" file => utils.py function {str(func)}  args {str(args)} and kwargs {kwargs} and response is {res.json()} ")
+						frappe.log_error(message=f" file => utils.py function {str(func)} args {str(args)}  and  kwargs {kwargs}  and response is {res.json()} ", title="Yealink API Not Success") 
 				except Exception as e:
 					print(f"Error parsing JSON during retry check: {e}")
 
