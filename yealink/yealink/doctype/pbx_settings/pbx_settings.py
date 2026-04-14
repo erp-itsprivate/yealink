@@ -118,14 +118,14 @@ class PBXSettings(Document):
 						doc=frappe.get_doc('PBX PhoneBook Sync', self.name + '-'+phonebook_sync.address_book)
 						if ('data'  in object_from_code):           
 							data=object_from_code['data']
-							
+							print(data)
 							for element in data :
 								data_str = json.dumps(element, sort_keys=True)
 								hash_value = hashlib.sha256(data_str.encode()).hexdigest()	
 								element.update({'hash':hash_value}) 
-									
+								print(element)	
 								if len (frappe.get_all("PBX Contacts Synced", fields=["*"], filters = {"parent":doc.name,"hash":hash_value})) == 0 :
-								
+									print('not exist')
 									element.update({'status':'NEW'})  
 									contact=doc.append("synced_contacts", {})
 									contact.hash=hash_value
@@ -158,9 +158,9 @@ class PBXSettings(Document):
 								else:								 
 									sync_contact.status='DELETED'
 									sync_contact.synced=0
-									sync_contact.save(ignore_permissions=True)
+									#sync_contact.save(ignore_permissions=True)
 
-						#doc.save(ignore_permissions=True)	
+						doc.save(ignore_permissions=True)	
 						frappe.db.commit()
 					else:
 						
