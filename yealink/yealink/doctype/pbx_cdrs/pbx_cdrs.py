@@ -142,3 +142,7 @@ def get_phone_cdrs_by_cdrid(number,limit):
 
 
 
+def get_cdrs_by_lead_id(lead_id):
+	cdrs=frappe.get_all('PBX CDRs',filters=[['related_doctype_id','=',lead_id]],order_by='cdr_id',fields=['call_type','related_doctype_id','company','call_from_name','call_from_number','talk_duration','disposition','call_to_name','call_id','cdr_id','cdr_time'])
+	if len(cdrs) > 0:
+		return cdrs
