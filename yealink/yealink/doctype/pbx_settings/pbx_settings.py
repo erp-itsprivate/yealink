@@ -9,6 +9,7 @@ from functools import wraps
 import hashlib
 import json
 import pymysql
+ 
 
 logger_exception = frappe.logger("Yealink.error", allow_site=True, file_count=50)
 logger_exception.setLevel(20)
@@ -141,8 +142,8 @@ class PBXSettings(Document):
 									contact.status='NEW'
 									contact.synced=0
 									phones=element.all_phones
-									num_list = [n.strip() for n in phones.split(",") if n.strip()]
-									
+									#num_list = [n.strip() for n in phones.split(",") if n.strip()]
+									num_list = [p.strip().replace("00963", "0", 1) for p in phones.split(",")]
 									for i, n in enumerate(num_list, start=1):
 										num_type = mapping.get(i)
 										contact.set(num_type,n)
@@ -193,8 +194,8 @@ class PBXSettings(Document):
 								contact.status='NEW'
 								contact.synced=0
 								phones=element.all_phones
-								num_list = [n.strip() for n in phones.split(",")]
-								
+								#num_list = [n.strip() for n in phones.split(",")]
+								num_list = [p.strip().replace("00963", "0", 1) for p in phones.split(",")]
 								for i, n in enumerate(num_list, start=1):
 									num_type = mapping.get(i)
 									contact.set(num_type,n)
